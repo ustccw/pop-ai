@@ -1,0 +1,118 @@
+# pop-ai 的配置。程序直接读仓库里的这个文件。
+# 改完保存即可，下次按快捷键生效。
+# API key 不写在这里。api_key_file 指向密钥文件，本文件可以放进仓库。
+# 改了快捷键之后，再执行一次 `pop-ai install-shortcuts` 才会写进 GNOME。
+
+[api]
+# 单次等待的最长时间，单位秒。
+timeout_sec = 90
+
+[deepseek]
+# 密钥文件路径。里面只放一行 DeepSeek API key，不要加引号。权限保持 0600。
+api_key_file = "~/.pop-ai/deepseek_key"
+# OpenAI 兼容接口。文档：https://api-docs.deepseek.com/zh-cn/
+base_url = "https://api.deepseek.com"
+# deepseek-flash 或 deepseek-v4-pro。flash 更快。
+model = "deepseek-flash"
+# false 关闭思考模式。联网搜索在关闭思考时由模型决定要不要搜。
+thinking = false
+# true 时打开 DeepSeek 的联网搜索和阅读链接。搜索在服务端完成。
+# 官方说明这一能力用于 deepseek-flash。
+web_search = true
+
+[limits]
+# 单次 prompt 超过这个字数则不发送。按 Unicode 字符计，含空格和换行。
+max_chars = 4000
+
+[ui]
+# Pango 字体描述，例如 "Sans 13"。
+font = "Sans 13"
+# 记录区宽度，以及记录区加上下面输入框的高度，单位像素。超出的内容在框内滚动。
+width = 1014
+height = 702
+# 向可编辑窗口发送 Ctrl+C 之后，等待选区出现的最长时间，单位毫秒。
+copy_wait_ms = 500
+
+[hotkeys]
+# GTK 快捷键写法。改完必须重新执行 install-shortcuts。
+# 若与系统快捷键冲突，install-shortcuts 会询问是否替换。不替换时改这里再执行一次。
+ask = "<Super>p"
+
+[prompts]
+# 有选区时写成：前缀：“选区”。没有选区时不写入。
+prefix = "请解释"
+# 发给模型的系统提示，保持英文。
+system = """
+Answer the user directly.
+Use the language the user wrote in.
+When the user asks you to explain a passage, explain that passage.
+When the user asks a question, answer it.
+Do not add a greeting or a closing offer to help further.
+Keep code, AT commands such as AT+CWJAP, identifiers, and numbers unchanged.
+Write plain text. Do not use Markdown.
+No asterisks, no underscores for emphasis, no hash headings, no fenced code, and no tables.
+For a list, write "1." "2." "3." or a middle dot "·".
+"""
+
+[windows]
+# 窗口类名 WM_CLASS，大小写不敏感。查看方式：xprop WM_CLASS
+# 下面这些窗口用 Ctrl+C 读取当前选区，读完后剪贴板会还原。
+# 终端即使被写进这份名单，也不会注入按键。
+editable_wm_class = [
+  "code",
+  "code-oss",
+  "code-insiders",
+  "codium",
+  "cursor",
+  "gedit",
+  "gnome-text-editor",
+  "org.gnome.texteditor",
+  "libreoffice-writer",
+  "libreoffice-calc",
+  "libreoffice-impress",
+  "libreoffice",
+  "soffice",
+  "mousepad",
+  "kate",
+  "sublime_text",
+  "obsidian",
+  "typora",
+  "wps",
+  "deepin-editor",
+  "pluma",
+  "xed",
+  "notepadqq",
+  "thunderbird",
+  "teams-for-linux",
+  "google-chrome",
+  "chromium",
+  "chromium-browser",
+  "firefox",
+  "firefox-esr",
+  "brave-browser",
+  "microsoft-edge",
+  "opera",
+  "vivaldi-stable"
+]
+
+# 这些窗口只读 PRIMARY 选区，不模拟 Ctrl+C。
+# 两个名单都没有的窗口同样只读 PRIMARY。
+readonly_wm_class = [
+  "gnome-terminal",
+  "gnome-terminal-server",
+  "kgx",
+  "kitty",
+  "alacritty",
+  "xterm",
+  "konsole",
+  "tilix",
+  "terminator",
+  "wezterm",
+  "xfce4-terminal",
+  "evince",
+  "atril",
+  "okular",
+  "zathura",
+  "xreader",
+  "mupdf"
+]
