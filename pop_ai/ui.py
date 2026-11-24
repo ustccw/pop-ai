@@ -26,7 +26,7 @@ from pop_ai.prompt import (
 from pop_ai.x11util import pointer_position
 
 HINT_IDLE = "Enter 发送，Shift+Enter 换行，Esc 关闭\n/save 保存会话，/clear 清除会话"
-HINT_WAIT = "Esc 取消"
+HINT_WAIT = "正在回复，可先输入下一句\n回复后 Enter 发送，Esc 关闭"
 TITLE = f"pop-ai (v{__version__})"
 INPUT_HEIGHT = 96
 _live = 0
@@ -563,15 +563,15 @@ class Popup:
             return False
         in_composer = widget is self.composer or self.composer.has_focus()
         if event.state & Gdk.ModifierType.SHIFT_MASK:
-            if in_composer and not self.loading:
+            if in_composer:
                 self.composer.get_buffer().insert_at_cursor("\n")
-            return True
-        if self.loading:
             return True
         if in_composer:
             action = self._enter_action(event)
-            if action == "send":
+            if action == "send" and not self.loading:
                 self._submit()
+            return True
+        if self.loading:
             return True
         self._submit()
         return True
@@ -596,7 +596,6 @@ class Popup:
         updated, start, end = append_question(self._transcript_text(), prompt)
         self.waiting = (start, end)
         self.loading = True
-        self.composer.set_editable(False)
         self._set_transcript(updated)
         self._set_composer("")
         self.hint.set_text(HINT_WAIT)
@@ -659,10 +658,10 @@ class Popup:
             updated = finish_turn(self._transcript_text(), start, end, body)
         except ValueError:
             updated = self._transcript_text() + "\n" + plain_reply(body)
-        self.composer.set_editable(True)
         self._set_transcript(updated)
         self._set_idle_hint()
-        self.composer.grab_focus()
+        if not self.composer.has_focus():
+            self.composer.grab_focus()
         return False
 
 
