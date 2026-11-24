@@ -1,6 +1,8 @@
 """Decide whether the focused window may receive Ctrl+C.
 
-Terminals are always read-only. Ctrl+C in a terminal is SIGINT.
+Terminals never receive a key. Ctrl+C there is SIGINT, and Ctrl+Shift+C
+reaches the shell as Ctrl+C when nothing is selected. A terminal highlight
+is read from the accessible text selection instead.
 """
 
 from __future__ import annotations
@@ -49,13 +51,16 @@ def classify_surface(
     editable_classes: list[str],
     readonly_classes: list[str],
 ) -> str:
-    """Return "editable" only for a listed window that is not a terminal.
+    """Return how the focused window's selection can be read.
 
-    Editable windows are asked for the selection with Ctrl+C. Every other
-    window is read from the PRIMARY selection and never receives a key.
+    "terminal" windows are not sent a key. "editable" windows are asked
+    with Ctrl+C. Every other window is read from PRIMARY and never receives
+    a key. PRIMARY that only repeats another window's clipboard is ignored.
     """
     names = window_names(instance, klass)
-    if not names or names & TERMINAL_WM_CLASSES:
+    if names & TERMINAL_WM_CLASSES:
+        return "terminal"
+    if not names:
         return "readonly"
     editable = {item.lower() for item in editable_classes}
     if names & editable:

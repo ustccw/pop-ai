@@ -57,7 +57,7 @@ For a list, write "1." "2." "3." or a middle dot "·".
 [windows]
 # 窗口类名 WM_CLASS，大小写不敏感。查看方式：xprop WM_CLASS
 # 下面这些窗口用 Ctrl+C 读取当前选区，读完后剪贴板会还原。
-# 终端即使被写进这份名单，也不会注入按键。
+# 终端即使被写进这份名单，也不会收到 Ctrl+C。
 editable_wm_class = [
   "code",
   "code-oss",
@@ -95,7 +95,9 @@ editable_wm_class = [
   "vivaldi-stable"
 ]
 
-# 这些窗口只读 PRIMARY 选区，不模拟 Ctrl+C。
+# 终端不发送按键。只读取当前高亮；高亮取消后留在 PRIMARY 里的旧文字不填入。
+# 其余窗口只读 PRIMARY 选区，不模拟按键。
+# 和剪贴板相同、又不属于当前窗口的内容视为剪贴板，不填入。
 # 两个名单都没有的窗口同样只读 PRIMARY。
 readonly_wm_class = [
   "gnome-terminal",

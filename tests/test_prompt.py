@@ -18,7 +18,14 @@ from pathlib import Path
 
 from pop_ai.shortcuts import Conflict, conflict_message, display_hotkey, same_accelerator, without_accelerator
 from pop_ai.windows import classify_surface
-from pop_ai.x11util import is_unselected_line_copy
+from pop_ai.x11util import (
+    accept_copied_text,
+    highlighted_text,
+    is_unselected_line_copy,
+    live_terminal_text,
+    owner_is_within,
+    primary_is_selection,
+)
 
 
 EDITABLE = ["code", "gedit", "gnome-terminal"]
@@ -109,6 +116,41 @@ class SelectionTests(unittest.TestCase):
         self.assertFalse(is_unselected_line_copy("划选的词", ""))
         self.assertFalse(is_unselected_line_copy("第一行\n第二行\n", ""))
 
+    def test_clipboard_helper_is_outside_the_focused_window(self):
+        root = 1
+        focused = 10
+        parents = {12: 11, 11: focused, focused: root, 20: root}
+        self.assertTrue(owner_is_within(12, focused, parents, root))
+        self.assertTrue(owner_is_within(focused, focused, parents, root))
+        self.assertFalse(owner_is_within(20, focused, parents, root))
+        self.assertFalse(owner_is_within(0, focused, parents, root))
+
+    def test_clipboard_left_in_primary_is_not_a_selection(self):
+        self.assertFalse(primary_is_selection("剪贴板", "剪贴板", True, False))
+        self.assertFalse(primary_is_selection("剪贴板\n", "剪贴板", True, False))
+        self.assertFalse(primary_is_selection("  \n", "剪贴板", True, True))
+
+    def test_highlighted_text_is_a_selection(self):
+        self.assertTrue(primary_is_selection("划选的句子", "剪贴板", True, False))
+        self.assertTrue(primary_is_selection("剪贴板", "剪贴板", True, True))
+        self.assertTrue(primary_is_selection("划选的句子", "", False, False))
+
+    def test_untouched_clipboard_is_not_a_copy(self):
+        self.assertFalse(accept_copied_text("剪贴板", "剪贴板", True, False))
+        self.assertTrue(accept_copied_text("剪贴板", "剪贴板", True, True))
+        self.assertTrue(accept_copied_text("划选的句子", "剪贴板", True, False))
+
+    def test_terminal_without_highlight_is_empty(self):
+        self.assertIsNone(highlighted_text(0, "上次选中的文字"))
+        self.assertIsNone(highlighted_text(1, "  \n"))
+        self.assertEqual(highlighted_text(1, "当前高亮"), "当前高亮")
+
+    def test_confirmed_highlight_can_come_from_primary(self):
+        self.assertEqual(live_terminal_text("划选的句子", "别的", False), "划选的句子")
+        self.assertEqual(live_terminal_text("", "划选的句子", True), "划选的句子")
+        self.assertIsNone(live_terminal_text("", "剪贴板", False))
+        self.assertIsNone(live_terminal_text(" \n", " \n", True))
+
 
 class WindowTests(unittest.TestCase):
     def test_editable_window_copies_with_keyboard(self):
@@ -117,7 +159,11 @@ class WindowTests(unittest.TestCase):
     def test_terminal_never_receives_ctrl_c(self):
         self.assertEqual(
             classify_surface("gnome-terminal", "Gnome-terminal", EDITABLE, READONLY),
-            "readonly",
+            "terminal",
+        )
+        self.assertEqual(
+            classify_surface("gnome-terminal-server", "Gnome-terminal", EDITABLE, READONLY),
+            "terminal",
         )
 
     def test_unknown_window_reads_primary(self):
